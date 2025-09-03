@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Cloud Storage</title>
+    <link rel="stylesheet" href="/CSS/styles.css">
+    <link rel="stylesheet" href="/CSS/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Cloud Storage</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="active"><a href="#"><i class="fas fa-cloud"></i> My Files</a></li>
+                    <li><a href="#"><i class="fas fa-share-alt"></i> Shared</a></li>
+                    <li><a href="#"><i class="fas fa-clock"></i> Recent</a></li>
+                    <li><a href="#"><i class="fas fa-star"></i> Starred</a></li>
+                    <li><a href="#"><i class="fas fa-trash"></i> Trash</a></li>
+                </ul>
+            </nav>
+            <div class="storage-info">
+                <div class="storage-progress">
+                    <div class="progress-bar" id="storageProgress" style="width: 25%"></div>
+
+                    <div class="user-info">
+                        <div class="user-avatar" id="userAvatar">SS</div>
+                        <div class="user-details">
+                            <span class="user-name" id="userName">sayma Sultana</span>
+                            <span class="user-email">sayma@gmail.com</span>
+                        </div>
+                    </div>
+        </aside>
+        <main class="main-content">
+            <header class="content-header">
+                <div class="breadcrumbs" id="page-title">
+                    <i class="fas fa-home"></i> My Files
+                </div>
+
+                <div class="actions">
+                    <button id="backBtn" class="btn btn-secondary" style="display:none;">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button id="uploadBtn" class="btn btn-primary">
+                        <i class="fas fa-upload"></i> Upload
+                    </button>
+                    <button id="newFolderBtn" class="btn">
+                        <i class="fas fa-folder-plus"></i> New Folder
+                    </button>
+                    <button id="logoutBtn" class="btn btn-secondary">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </header>
+            <div class="file-browser" id="fileBrowser">
+                <!-- Files will be loaded here dynamically -->
+            </div>
+        </main>
+    </div>
+
+    <!-- New Folder Modal -->
+    <div id="newFolderModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New Folder</h3>
+                <button type="button" class="close-btn" onclick="closeModal('newFolderModal')">&times;</button>
+            </div>
+            <form id="newFolderForm">
+                <div class="form-group">
+                    <label for="folderName">Folder Name</label>
+                    <input type="text" id="folderName" required placeholder="Enter folder name">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary"
+                        onclick="closeModal('newFolderModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Folder</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- File Actions Modal -->
+    <div id="fileActionsModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>File Actions</h3>
+                <button type="button" class="close-btn" onclick="closeModal('fileActionsModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <button type="button" class="action-item" id="renameBtn">
+                    <i class="fas fa-edit"></i> Rename
+                </button>
+                <button type="button" class="action-item" id="downloadBtn">
+                    <i class="fas fa-download"></i> Download
+                </button>
+                <button type="button" class="action-item danger" id="deleteBtn">
+                    <i class="fas fa-trash"></i> Move to Trash
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+
+    <!-- Scripts -->
+    <script src="/JS/utils.js"></script>
+    <script src="/JS/dashboard.js"></script>
+    <script src="/JS/fileAction.js"></script>
+
+    <script>
+        // Modal functions - ensure they're available globally
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'flex';
+                // Focus on the first input if available
+                const firstInput = modal.querySelector('input[type="text"]');
+                if (firstInput) {
+                    setTimeout(() => firstInput.focus(), 100);
+                }
+            }
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Close modal when clicking outside of modal content
+        document.addEventListener('click', function (e) {
+            if (e.target.classList.contains('modal')) {
+                closeModal(e.target.id);
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                const openModal = document.querySelector('.modal[style*="flex"]');
+                if (openModal) {
+                    closeModal(openModal.id);
+                }
+            }
+        });
+
+        // Breadcrumb styling (optional)
+        document.addEventListener('DOMContentLoaded', function () {
+            const style = document.createElement('style');
+            style.textContent = `
+                .breadcrumbs {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-size: 14px;
+                    color: #666;
+                    flex-wrap: wrap;
+                }
+                
+                .breadcrumbs a {
+                    color: #007bff;
+                    text-decoration: none;
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    transition: background-color 0.2s;
+                }
+                
+                .breadcrumbs a:hover {
+                    background-color: #f0f8ff;
+                    text-decoration: none;
+                }
+                
+                .breadcrumbs .fa-chevron-right {
+                    font-size: 12px;
+                    color: #999;
+                    margin: 0 4px;
+                }
+                
+                .breadcrumbs span {
+                    color: #333;
+                    font-weight: 500;
+                }
+                
+                .breadcrumbs .fa-home {
+                    font-size: 12px;
+                }
+            `;
+            document.head.appendChild(style);
+        });
+
+        // Make functions globally available
+        window.openModal = openModal;
+        window.closeModal = closeModal;
+    </script>
+</body>
+
+</html>
